@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import type { Reel } from '@/types';
 
 interface ReelCardProps {
@@ -34,10 +35,12 @@ export default function ReelCard({ reel }: ReelCardProps) {
     <div className="overflow-hidden rounded-xl bg-white shadow-lg transition-shadow hover:shadow-xl dark:bg-zinc-900">
       {reel.thumbnail && (
         <div className="relative aspect-[9/16] w-full overflow-hidden bg-zinc-200 dark:bg-zinc-800">
-          <img
+          <Image
             src={reel.thumbnail}
             alt={reel.title}
-            className="h-full w-full object-cover"
+            fill
+            className="object-cover"
+            unoptimized
           />
         </div>
       )}

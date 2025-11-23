@@ -7,7 +7,7 @@ export default function TranscriptGenerator() {
   const [transcript, setTranscript] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [error, setError] = useState('');
+  const [, setError] = useState('');
 
   const handleGenerate = async () => {
     if (!content.trim()) return;

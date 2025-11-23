@@ -13,7 +13,7 @@ export default function BuzzAnalyzer() {
   const [transcript, setTranscript] = useState('');
   const [analysis, setAnalysis] = useState<BuzzAnalysis | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [, setError] = useState('');
 
   const handleAnalyze = async () => {
     if (!transcript.trim()) return;
