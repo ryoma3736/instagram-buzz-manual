@@ -2,27 +2,32 @@
 
 import { useState } from 'react';
 
-interface TranscriptGeneratorProps {
-  onGenerate?: (content: string) => Promise<string>;
-}
-
-export default function TranscriptGenerator({
-  onGenerate,
-}: TranscriptGeneratorProps) {
+export default function TranscriptGenerator() {
   const [content, setContent] = useState('');
   const [transcript, setTranscript] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [error, setError] = useState('');
 
   const handleGenerate = async () => {
     if (!content.trim()) return;
 
     setIsLoading(true);
+    setError('');
     try {
-      if (onGenerate) {
-        const result = await onGenerate(content);
-        setTranscript(result);
+      const res = await fetch('/api/transcript', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setTranscript(data.data.transcript);
+      } else {
+        setError(data.error || 'Generation failed');
       }
+    } catch {
+      setError('Failed to generate transcript');
     } finally {
       setIsLoading(false);
     }

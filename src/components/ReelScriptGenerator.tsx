@@ -13,31 +13,23 @@ export default function ReelScriptGenerator() {
 
     setIsGenerating(true);
 
-    // Simulate generation - in real implementation, this would call an API
-    setTimeout(() => {
-      // Create a more engaging version of the script
-      const lines = originalScript.split('\n').filter(line => line.trim());
-      const enhancedLines = lines.map((line, index) => {
-        if (index === 0) {
-          return `[Hook] ${line}`;
-        } else if (index === lines.length - 1) {
-          return `[CTA] ${line}`;
-        }
-        return line;
+    try {
+      const res = await fetch('/api/reel-script', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ originalScript }),
       });
-
-      const newScript = `--- Reel台本 ---
-
-${enhancedLines.join('\n\n')}
-
----
-推奨時間: ${Math.min(60, Math.max(15, lines.length * 5))}秒
-推奨BGM: トレンド音源を使用
----`;
-
-      setGeneratedScript(newScript);
+      const data = await res.json();
+      if (data.success) {
+        setGeneratedScript(data.data.newScript);
+      } else {
+        console.error('Reel script generation failed:', data.error);
+      }
+    } catch (error) {
+      console.error('Failed to generate reel script:', error);
+    } finally {
       setIsGenerating(false);
-    }, 1000);
+    }
   };
 
   const handleCopy = async () => {

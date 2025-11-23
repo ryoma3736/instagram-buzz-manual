@@ -1,13 +1,29 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { generateComment } from '@/lib/ai-client';
+import { NextRequest } from 'next/server';
+import { generateContent, prompts } from '@/lib/gemini';
+import { handleApiError, successResponse, ApiError } from '@/lib/api-error';
+import type { CommentRequest, CommentResponse } from '@/types/api';
 
-export async function POST(req: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
-    const { content, comment, type } = await req.json();
-    if (!content) return NextResponse.json({ error: 'Content required' }, { status: 400 });
-    const ideas = await generateComment(content, type === 'reply' ? comment : undefined);
-    return NextResponse.json({ ideas, type: type || 'engagement' });
-  } catch (e) {
-    return NextResponse.json({ error: 'Failed' }, { status: 500 });
+    const body: CommentRequest = await request.json();
+
+    if (!body.mode || !body.context?.trim()) {
+      throw new ApiError('Mode and context are required', 400);
+    }
+
+    if (body.mode !== 'reply' && body.mode !== 'engagement') {
+      throw new ApiError('Mode must be "reply" or "engagement"', 400);
+    }
+
+    const result = await generateContent(prompts.comment(body.mode, body.context));
+    const jsonMatch = result.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      throw new ApiError('Failed to parse comment result', 500);
+    }
+
+    const comments: CommentResponse = JSON.parse(jsonMatch[0]);
+    return successResponse<CommentResponse>(comments);
+  } catch (error) {
+    return handleApiError(error);
   }
 }

@@ -13,26 +13,23 @@ export default function CaptionGenerator() {
 
     setIsGenerating(true);
 
-    // Simulate generation - in real implementation, this would call an API
-    setTimeout(() => {
-      // Extract key points and create a caption
-      const sentences = script.split(/[。！？\n]/).filter(s => s.trim());
-      const keyPoints = sentences.slice(0, 3).map(s => s.trim());
-
-      const generatedCaption = `${keyPoints[0] || ''}
-
-${keyPoints.slice(1).map(point => `\u2728 ${point}`).join('\n')}
-
----
-
-\u{1F449} 保存して後で見返してね！
-\u{1F4AC} コメントで感想教えてください
-
-#インスタグラム #Reels #バズ #おすすめ #fyp`;
-
-      setCaption(generatedCaption);
+    try {
+      const res = await fetch('/api/caption', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ transcript: script }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setCaption(data.data.caption);
+      } else {
+        console.error('Caption generation failed:', data.error);
+      }
+    } catch (error) {
+      console.error('Failed to generate caption:', error);
+    } finally {
       setIsGenerating(false);
-    }, 1000);
+    }
   };
 
   const handleCopy = async () => {

@@ -1,13 +1,25 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { generateThreads } from '@/lib/ai-client';
+import { NextRequest } from 'next/server';
+import { generateContent, prompts } from '@/lib/gemini';
+import { handleApiError, successResponse, ApiError } from '@/lib/api-error';
+import type { ThreadsRequest, ThreadsResponse } from '@/types/api';
 
-export async function POST(req: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
-    const { title, transcript } = await req.json();
-    if (!title || !transcript) return NextResponse.json({ error: 'Title and transcript required' }, { status: 400 });
-    const post = await generateThreads(title, transcript);
-    return NextResponse.json(post);
-  } catch (e) {
-    return NextResponse.json({ error: 'Failed' }, { status: 500 });
+    const body: ThreadsRequest = await request.json();
+
+    if (!body.title?.trim() || !body.transcript?.trim()) {
+      throw new ApiError('Title and transcript are required', 400);
+    }
+
+    const result = await generateContent(prompts.threads(body.title, body.transcript));
+    const jsonMatch = result.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      throw new ApiError('Failed to parse threads result', 500);
+    }
+
+    const threads: ThreadsResponse = JSON.parse(jsonMatch[0]);
+    return successResponse<ThreadsResponse>(threads);
+  } catch (error) {
+    return handleApiError(error);
   }
 }

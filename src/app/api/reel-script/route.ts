@@ -1,13 +1,21 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { generateReelScript } from '@/lib/ai-client';
+import { NextRequest } from 'next/server';
+import { generateContent, prompts } from '@/lib/gemini';
+import { handleApiError, successResponse, ApiError } from '@/lib/api-error';
+import type { ReelScriptRequest, ReelScriptResponse } from '@/types/api';
 
-export async function POST(req: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
-    const { transcript } = await req.json();
-    if (!transcript) return NextResponse.json({ error: 'Transcript required' }, { status: 400 });
-    const script = await generateReelScript(transcript);
-    return NextResponse.json({ script });
-  } catch (e) {
-    return NextResponse.json({ error: 'Failed' }, { status: 500 });
+    const body: ReelScriptRequest = await request.json();
+
+    if (!body.originalScript?.trim()) {
+      throw new ApiError('Original script is required', 400);
+    }
+
+    const newScript = await generateContent(
+      prompts.reelScript(body.originalScript, body.perspective)
+    );
+    return successResponse<ReelScriptResponse>({ newScript });
+  } catch (error) {
+    return handleApiError(error);
   }
 }

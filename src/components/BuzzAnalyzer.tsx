@@ -1,26 +1,44 @@
 'use client';
 
 import { useState } from 'react';
-import type { BuzzAnalysis } from '@/types';
 
-interface BuzzAnalyzerProps {
-  onAnalyze?: (transcript: string) => Promise<BuzzAnalysis>;
+interface BuzzAnalysis {
+  reasons: string[];
+  patterns: string[];
+  successFactors: string[];
+  recommendations: string[];
 }
 
-export default function BuzzAnalyzer({ onAnalyze }: BuzzAnalyzerProps) {
+export default function BuzzAnalyzer() {
   const [transcript, setTranscript] = useState('');
   const [analysis, setAnalysis] = useState<BuzzAnalysis | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const handleAnalyze = async () => {
     if (!transcript.trim()) return;
 
     setIsLoading(true);
+    setError('');
     try {
-      if (onAnalyze) {
-        const result = await onAnalyze(transcript);
-        setAnalysis(result);
+      const res = await fetch('/api/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ transcript }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setAnalysis({
+          reasons: data.data.reasons || [],
+          patterns: data.data.patterns || [],
+          successFactors: data.data.recommendations?.slice(0, 2) || [],
+          recommendations: data.data.recommendations || [],
+        });
+      } else {
+        setError(data.error || 'Analysis failed');
       }
+    } catch {
+      setError('Failed to analyze');
     } finally {
       setIsLoading(false);
     }
