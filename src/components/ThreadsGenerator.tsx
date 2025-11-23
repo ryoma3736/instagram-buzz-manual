@@ -15,15 +15,28 @@ export default function ThreadsGenerator() {
 
     setIsGenerating(true);
 
-    // Simulate generation - in real implementation, this would call an API
-    setTimeout(() => {
+    try {
+      const res = await fetch('/api/threads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, transcript: script }),
+      });
+
+      if (!res.ok) throw new Error('API Error');
+
+      const data = await res.json();
+      setPart1(data.part1 || '');
+      setPart2(data.part2 || '');
+    } catch (error) {
+      console.error('Failed to generate threads:', error);
+      // Fallback to local generation
       const midPoint = Math.floor(script.length / 2);
       const splitIndex = script.indexOf('。', midPoint) + 1 || midPoint;
-
       setPart1(`【${title}】Part 1\n\n${script.slice(0, splitIndex).trim()}\n\n続きはPart 2へ...`);
       setPart2(`【${title}】Part 2\n\n${script.slice(splitIndex).trim()}`);
+    } finally {
       setIsGenerating(false);
-    }, 1000);
+    }
   };
 
   const handleCopy = async (part: 'part1' | 'part2') => {

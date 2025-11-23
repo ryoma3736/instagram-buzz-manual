@@ -18,30 +18,42 @@ export default function CommentHelper() {
 
     setIsGenerating(true);
 
-    // Simulate generation - in real implementation, this would call an API
-    setTimeout(() => {
-      let generatedIdeas: string[] = [];
+    try {
+      const res = await fetch('/api/comment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          content,
+          comment: commentType === 'reply' ? receivedComment : undefined,
+          type: commentType,
+        }),
+      });
 
+      if (!res.ok) throw new Error('API Error');
+
+      const data = await res.json();
+      setIdeas(data.ideas || []);
+    } catch (error) {
+      console.error('Failed to generate comments:', error);
+      // Fallback to local generation
+      let generatedIdeas: string[] = [];
       if (commentType === 'reply') {
         generatedIdeas = [
           `ありがとうございます！${receivedComment.includes('?') || receivedComment.includes('？') ? 'そうなんです！' : '嬉しいです！'}`,
           `コメントありがとうございます！参考になれば幸いです`,
-          `${receivedComment.length > 20 ? '詳しくコメントいただきありがとうございます！' : 'ありがとうございます！'}また見に来てくださいね`,
           `嬉しいコメントありがとうございます！励みになります`,
         ];
       } else {
         generatedIdeas = [
-          `この投稿すごく参考になりました！特に○○の部分が勉強になります`,
-          `いつも素敵な投稿ありがとうございます！フォローさせていただきました`,
-          `めっちゃ共感します！私も同じこと思ってました`,
-          `質問なのですが、○○についてもっと詳しく知りたいです！`,
+          `この投稿すごく参考になりました！`,
+          `めっちゃ共感します！`,
           `保存しました！後でじっくり見返します`,
         ];
       }
-
       setIdeas(generatedIdeas);
+    } finally {
       setIsGenerating(false);
-    }, 1000);
+    }
   };
 
   const handleCopy = async (text: string, index: number) => {

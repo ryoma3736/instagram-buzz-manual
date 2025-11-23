@@ -3,7 +3,7 @@
 import { useState } from 'react';
 
 interface ReelSearchProps {
-  onSearch: (params: {
+  onSearch?: (params: {
     keyword: string;
     minViews: number;
     startDate: string;
@@ -20,7 +20,7 @@ export default function ReelSearch({ onSearch, isLoading = false }: ReelSearchPr
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSearch({ keyword, minViews, startDate, endDate });
+    onSearch?.({ keyword, minViews, startDate, endDate });
   };
 
   return (

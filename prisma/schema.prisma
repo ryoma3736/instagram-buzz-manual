@@ -1,0 +1,82 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Reel {
+  id        String   @id @default(cuid())
+  url       String   @unique
+  title     String
+  views     Int
+  likes     Int
+  comments  Int
+  postedAt  DateTime
+  thumbnail String?
+  author    String
+  keywords  String[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  transcripts Transcript[]
+  analyses    BuzzAnalysis[]
+}
+
+model Transcript {
+  id        String   @id @default(cuid())
+  content   String   @db.Text
+  reelId    String?
+  reel      Reel?    @relation(fields: [reelId], references: [id])
+  createdAt DateTime @default(now())
+
+  scripts   ReelScript[]
+  captions  Caption[]
+  threads   ThreadsPost[]
+}
+
+model BuzzAnalysis {
+  id              String   @id @default(cuid())
+  reasons         String[]
+  patterns        String[]
+  successFactors  String[]
+  recommendations String[]
+  reelId          String?
+  reel            Reel?    @relation(fields: [reelId], references: [id])
+  createdAt       DateTime @default(now())
+}
+
+model ThreadsPost {
+  id           String      @id @default(cuid())
+  part1        String      @db.Text
+  part2        String      @db.Text
+  transcriptId String?
+  transcript   Transcript? @relation(fields: [transcriptId], references: [id])
+  createdAt    DateTime    @default(now())
+}
+
+model ReelScript {
+  id           String      @id @default(cuid())
+  content      String      @db.Text
+  transcriptId String?
+  transcript   Transcript? @relation(fields: [transcriptId], references: [id])
+  createdAt    DateTime    @default(now())
+}
+
+model Caption {
+  id           String      @id @default(cuid())
+  content      String      @db.Text
+  transcriptId String?
+  transcript   Transcript? @relation(fields: [transcriptId], references: [id])
+  createdAt    DateTime    @default(now())
+}
+
+model CommentIdea {
+  id        String   @id @default(cuid())
+  type      String   // 'reply' or 'engagement'
+  ideas     String[]
+  content   String   @db.Text
+  comment   String?  @db.Text
+  createdAt DateTime @default(now())
+}
